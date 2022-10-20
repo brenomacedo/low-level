@@ -116,9 +116,35 @@ print_uint:
 	pop rbp
 	ret
 
-_start:
-	mov rsi, 0
+print_int:
+	push rbp
+	mov rbp, rsp
+
+	sub rsp, 1
+	mov byte[rbp - 1], 45
+
+	test rsi, rsi
+	jns .print_u
+	neg rsi
+
+	push rsi
+	lea rsi, [rbp - 1]
+	mov rdi, 1
+	mov rax, 1
+	mov rdx, 1
+	syscall
+	pop rsi
+	
+.print_u:
 	call print_uint
+
+	add rsp, 1
+	pop rbp
+	ret
+
+_start:
+	mov rsi, 351
+	call print_int
 
 	xor rdi, rdi
 	call exit
