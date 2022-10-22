@@ -4,6 +4,8 @@ section .data
 str: db "hello world", 10, 0
 result: db 0, 10
 divisor: dq 10
+number: db "123456789", 0
+neg_number: db "-123456789", 0
 section .text
 
 ; recebe o codigo de erro em rax e executa a chamada de sistema
@@ -226,20 +228,97 @@ get_word:
 	ret
 
 parse_uint:
-	ret
+	mov rax, 0
+	mov rdx, 0
+
+.loop:
+	mov cl, [rsi]
+	test cl, cl
+	jz .end
+
+	sub cl, 48
+
+	push rdx
+	mul qword[divisor]
+	pop rdx
+
+	add rax, rcx
+	inc rsi
+	inc rdx
+	jmp .loop
+
+.end:
+	ret	
 
 parse_int:
+	cmp byte[rsi], '-'
+	je .negative
+	call parse_uint
+	ret
+.negative:
+	inc rsi
+	call parse_uint
+	neg rax
+	inc rdx
 	ret
 
 str_cmp:
+.loop:
+	mov cl, [rsi]
+	cmp cl, [rdi]
+	jne .not_equal
+	inc rsi
+	inc rdi
+	test cl, cl
+	jz .equal
+	jmp .loop
+
+.equal:
+	mov rax, 1
+	ret
+.not_equal:
+	mov rax, 0
 	ret
 
+; recebe uma string em rsi e um buffer em rdi
+; e o tamanho do buffer em rdx, copia
+; a string para o buffer
 str_copy:
+	push rdx
+	push rdi
+	push rsi
+	call str_len
+	
+	mov rax, rdx
+	pop rsi
+	pop rdi
+	pop rdx
+
+	inc rax
+	cmp rdx, rax
+	jl .end
+	
+.loop:
+	cmp rax, 0
+	je .end
+	mov cl, [rsi]
+	mov [rdi], cl
+	inc rsi
+	inc rdi
+	dec rax
+	jmp .loop
+
+.end:
 	ret
 
 _start:
-	mov rsi, -651652
-	call print_int
+	mov rdx, 10
+	mov rsi, number
+	mov rdi, neg_number
+	call str_copy
+
+	mov rsi, neg_number
+	call print_string
 
 	xor rdi, rdi
 	call exit
