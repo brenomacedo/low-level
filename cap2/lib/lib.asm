@@ -72,7 +72,7 @@ print_uint:
 
 .loop:
 	mov rdx, 0
-	idiv qword[divisor]
+	div qword[divisor]
 	add rdx, 48
 	sub rsp, 1
 	inc rcx
@@ -225,21 +225,21 @@ get_word:
 	pop rbx
 	ret
 
+parse_uint:
+	ret
+
+parse_int:
+	ret
+
+str_cmp:
+	ret
+
+str_copy:
+	ret
+
 _start:
-	push rbp
-	mov rbp, rsp
-	sub rsp, 10
-
-	mov rdx, 10
-	lea rsi, [rbp - 10]
-
-	call get_word
-
-	lea rsi, [rbp - 10]
-	call print_string
-
-	add rsp, 10
-	pop rbp
+	mov rsi, -651652
+	call print_int
 
 	xor rdi, rdi
 	call exit
