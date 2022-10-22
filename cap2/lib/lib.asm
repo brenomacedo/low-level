@@ -37,14 +37,14 @@ print_string:
 	syscall
 	ret
 
-; recebe o codigo ascii de um caractere em rsi
+; recebe o codigo ascii de um caractere em sil
 ; e o escreve em stdout
 print_char:
 	push rbp
 	mov rbp, rsp
 	sub rsp, 1
 
-	mov [rbp - 1], rsi
+	mov [rbp - 1], sil
 	lea rsi, [rbp - 1]
 	mov rdi, 1
 	mov rax, 1
@@ -142,9 +142,104 @@ print_int:
 	pop rbp
 	ret
 
+; limpar o buffer (deve ser executado)
+; quando se tem certeza que o buffer possui
+; ao menos um caractere
+clear_buffer:
+	push rbp
+	mov rbp, rsp
+	sub rsp, 1
+
+.loop:
+	mov rax, 0
+	mov rdi, 0
+	lea rsi, [rbp - 1]
+	mov rdx, 1
+	syscall
+
+	mov cl, [rbp - 1]
+	cmp cl, 10
+	jne .loop
+	
+	add rsp, 1
+	pop rbp
+	ret
+
+; lê um caractere do stdin e devolve seu ascii no cl
+get_char:
+	push rbp
+	mov rbp, rsp
+	sub rsp, 1
+	
+	mov rax, 0
+	mov rdi, 0
+	mov rdx, 1
+	lea rsi, [rbp - 1]
+	syscall
+
+	mov cl, [rbp - 1]
+
+	add rsp, 1
+	pop rbp
+	ret
+
+; recebe um tamanho de buffer em rdx e o endereço em rsi
+; e le uma string de stdin e o poe no buffer
+get_word:
+	push rbx
+	
+	mov rbx, 0
+	dec rdx
+.loop:
+	push rdx
+	push rsi
+	call get_char
+	pop rsi
+	pop rdx
+
+	cmp rbx, rdx
+	jg .greater
+
+	push rsi
+	add rsi, rbx
+
+	cmp cl, 10;
+	je .end_of_string
+
+	mov byte[rsi], cl
+	pop rsi
+	inc rbx
+
+	jmp .loop
+
+.end_of_string:
+	mov byte[rsi], 0
+	pop rsi
+	jmp .end
+	
+.greater:
+	mov byte[rsi], 0
+	jmp .end			
+
+.end:
+	pop rbx
+	ret
+
 _start:
-	mov rsi, 351
-	call print_int
+	push rbp
+	mov rbp, rsp
+	sub rsp, 10
+
+	mov rdx, 10
+	lea rsi, [rbp - 10]
+
+	call get_word
+
+	lea rsi, [rbp - 10]
+	call print_string
+
+	add rsp, 10
+	pop rbp
 
 	xor rdi, rdi
 	call exit
